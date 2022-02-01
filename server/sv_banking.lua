@@ -214,6 +214,8 @@ FRAMEWORK.BANKING = {
 			end
 		end)
 
+		return Citizen.Await(p)
+
 	end,
 
 }

@@ -16,33 +16,48 @@ FRAMEWORK.PAYCHECK = {
 		
 	end,
 
-	SendPaychecks = function(self)
+	Guaranteed = {
+		['lspd'] = true,
+		['bcso'] = true,
+		['sast'] = true,
+		['sasp'] = true,
+		['doc'] = true,
+		['sapr'] = true,
+		['legacyrecords'] = true,
+		['pa'] = true,
+		['ambulance'] = true,
+		['weazelnews'] = true
+	},
 
+	SendPaychecks = function(self)
 		local walfareCheck = math.random(50, 75)
 		for k,v in pairs(FRAMEWORK.MAIN.Players) do
-			if not v.job then return end;
-
-			self:NewPaycheck(v.cid, walfareCheck, 1, v.source)
-
-			if not (v.duty == 1 or v.duty == 2) then return end;
-			if not JOBS.JobList[v.job] then return end;
-
-			local gradeInfo = JOBS.JobList[v.job]['grades'][v.grade]
-			if not gradeInfo then return end;
-
-			local paycheckAmount = tonumber(gradeInfo.moneys)
-			if JOBS.JobList[v.job]['business'] then
-				if Guaranteed[job] then self:NewPaycheck(v.cid, paycheckAmount, 2, v.source) return end;
-				TriggerEvent('erp_phone:GetMoney', v.job, function(res)
-					if res >= pay then
-						exports.oxmysql:executeSync("UPDATE businesses SET funds = funds-:pay WHERE name=:name", {pay = paycheckAmount, name = v.job})
-						self:NewPaycheck(v.cid, paycheckAmount, 2, v.source)
-					else
-						TriggerClientEvent('erp_notifications:client:SendAlert', v.source, { type = 'inform', text = 'Your current employee lacks funds pay you this week.', length = 7500 })
+			if v.job then
+				self:NewPaycheck(v.cid, walfareCheck, 1, v.source)
+				if v.job.duty == 1 or v.job.duty == 2 then
+					if FRAMEWORK.JOBS.JobList[v.job.name] then
+						local gradeInfo = FRAMEWORK.JOBS.JobList[v.job.name]['grades'][v.job.grade]
+						if gradeInfo then 
+							local payCheck = tonumber(gradeInfo.moneys)
+							if FRAMEWORK.JOBS.JobList[v.job.name]['business'] then
+								if self.Guaranteed[v.job.name] then 
+									self:NewPaycheck(v.cid, payCheck, 2, v.source) 
+								else
+									TriggerEvent('erp_phone:GetMoney', v.job.name, function(res)
+										if res >= payCheck then
+											exports.oxmysql:executeSync("UPDATE businesses SET funds = funds-:pay WHERE name=:name", {pay = payCheck, name = v.job.name})
+											self:NewPaycheck(v.cid, payCheck, 2, v.source)
+										else
+											TriggerClientEvent('erp_notifications:client:SendAlert', v.source, { type = 'inform', text = 'Your current employee lacks funds pay you this week.', length = 7500 })
+										end
+									end)
+								end;
+							else
+								self:NewPaycheck(v.cid, payCheck, 2, v.source)
+							end
+						end
 					end
-				end)
-			else
-				self:NewPaycheck(v.cid, paycheckAmount, 2, v.source)
+				end
 			end
 		end
 

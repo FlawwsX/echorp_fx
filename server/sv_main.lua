@@ -206,14 +206,14 @@ FRAMEWORK.MAIN = {
 
 		local discordMessage = ('Player: **%s** (**%s**)\nCharacter: **%s** (**%s**)\nIdentifier: **%s**\nCash: `%s` · Bank: `%s` · Job: `%s` | `%s`'):format(
 			charInfo.name,
-			source,
+			charInfo.source,
 			charInfo.fullname,
-			cid,
+			charInfo.cid,
 			charInfo.identifier,
 			'$'..charInfo.cash,
 			'$'..charInfo.bank,
-			charInfo.job,
-			charInfo.job_grade
+			charInfo.job.name,
+			charInfo.job.job_grade
 		)
 
 		exports['erp_adminmenu']:sendToDiscord('Character Logout', discordMessage, "16758838", GetConvar('gamelogs_webhook', ''))
@@ -284,6 +284,10 @@ FRAMEWORK.MAIN = {
 				citizenId = citizenId
 			})
 		end
+
+		exports.oxmysql:executeSync("DELETE FROM `user_inventory2` WHERE `name`=:name", {
+			name = "ply-"..citizenId
+		})
 
 		exports.oxmysql:insertSync("INSERT INTO `users` (`id`, `identifier`, `firstname`, `lastname`, `dateofbirth`, `gender`) VALUES (:id, :identifier, :firstname, :lastname, :dateofbirth, :gender)", {
 			id = citizenId,
